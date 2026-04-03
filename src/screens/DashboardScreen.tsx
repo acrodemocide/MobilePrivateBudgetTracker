@@ -8,6 +8,21 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Transaction } from '../types';
+
+function formatAmount(cents: number): string {
+  const dollars = Math.floor(cents / 100);
+  const centsStr = (cents % 100).toString().padStart(2, '0');
+  return `$${dollars.toLocaleString()}.${centsStr}`;
+}
+
+function formatTime(date: Date): string {
+  const h = date.getHours();
+  const m = date.getMinutes().toString().padStart(2, '0');
+  const ampm = h >= 12 ? 'pm' : 'am';
+  const hour = h % 12 || 12;
+  return `${hour}:${m}${ampm}`;
+}
 
 // ─── Palette ────────────────────────────────────────────────────────────────
 const C = {
@@ -148,13 +163,13 @@ function NavTab({
 }
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
-export default function DashboardScreen({ onAddExpense }: { onAddExpense: () => void }) {
-  const transactions = [
-    { id: 1, bg: C.red,    icon: '🔒', amount: '$1,000', age: '2 age', time: '$5pm'   },
-    { id: 2, bg: C.orange, icon: '🏠', amount: '$2,500', age: '2 age', time: '3.5pm'  },
-    { id: 3, bg: C.purple, icon: '🏠', amount: '$1,500', age: '2 age', time: '5.5pm'  },
-    { id: 4, bg: C.blue,   icon: '🏠', amount: '$1,900', age: '2 age', time: '$.01pm' },
-  ];
+export default function DashboardScreen({
+  transactions,
+  onAddExpense,
+}: {
+  transactions: Transaction[];
+  onAddExpense: () => void;
+}) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -224,16 +239,20 @@ export default function DashboardScreen({ onAddExpense }: { onAddExpense: () => 
           <Text style={styles.txFilter}>Teall</Text>
         </View>
 
-        {transactions.map(tx => (
-          <View key={tx.id} style={styles.txRow}>
-            <TxIcon bg={tx.bg} label={tx.icon} />
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={styles.txAmount}>{tx.amount}</Text>
-              <Text style={styles.txAge}>{tx.age}</Text>
+        {transactions.length === 0 ? (
+          <Text style={styles.emptyText}>No transactions yet</Text>
+        ) : (
+          transactions.map(tx => (
+            <View key={tx.id} style={styles.txRow}>
+              <TxIcon bg={tx.categoryBg} label={tx.categoryIcon} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.txAmount}>{formatAmount(tx.amountCents)}</Text>
+                <Text style={styles.txAge}>{tx.note || 'No note'}</Text>
+              </View>
+              <Text style={styles.txTime}>{formatTime(tx.createdAt)}</Text>
             </View>
-            <Text style={styles.txTime}>{tx.time}</Text>
-          </View>
-        ))}
+          ))
+        )}
 
         {/* bottom padding so FAB doesn't overlap last row */}
         <View style={{ height: 80 }} />
@@ -384,6 +403,12 @@ const styles = StyleSheet.create({
   },
 
   // Transactions
+  emptyText: {
+    color: C.gray,
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 16,
+  },
   txHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

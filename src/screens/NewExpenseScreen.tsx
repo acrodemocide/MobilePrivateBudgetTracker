@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Transaction } from '../types';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const C = {
@@ -21,22 +23,50 @@ const C = {
   lockGray: '#2E3245',
 };
 
+// ─── Category definitions ─────────────────────────────────────────────────────
+const CATEGORIES = [
+  { icon: '💼', bg: '#3DAA6E', locked: false, star: false },
+  { icon: '🚗', bg: '#4A90D9', locked: false, star: false },
+  { icon: '⊞',  bg: '#7B5EA7', locked: false, star: false },
+  { icon: '📥', bg: '#E05C3A', locked: false, star: false },
+  { icon: '💾', bg: '#2BB5A0', locked: false, star: false },
+  { icon: '👑', bg: '#C9A84C', locked: false, star: false },
+  { icon: '📊', bg: '#4A4F60', locked: true,  star: false },
+  { icon: '⭐', bg: '#2E3245', locked: true,  star: true  },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatCents(cents: number): string {
+  const dollars = Math.floor(cents / 100);
+  const centsStr = (cents % 100).toString().padStart(2, '0');
+  return `$${dollars}.${centsStr}`;
+}
+
 // ─── Category icon button ─────────────────────────────────────────────────────
 function CategoryBtn({
   bg,
   icon,
   locked,
   star,
+  selected,
+  onPress,
 }: {
   bg: string;
   icon: string;
   locked?: boolean;
   star?: boolean;
+  selected?: boolean;
+  onPress?: () => void;
 }) {
   return (
     <TouchableOpacity
-      style={[styles.catBtn, { backgroundColor: bg }]}
-      activeOpacity={0.75}>
+      style={[
+        styles.catBtn,
+        { backgroundColor: bg },
+        selected && styles.catBtnSelected,
+      ]}
+      activeOpacity={locked ? 1 : 0.75}
+      onPress={locked ? undefined : onPress}>
       <Text style={styles.catIcon}>{icon}</Text>
       {locked && (
         <View style={styles.lockBadge}>
@@ -53,9 +83,17 @@ function CategoryBtn({
 }
 
 // ─── Numpad key ───────────────────────────────────────────────────────────────
-function NumKey({ label, sub }: { label: string; sub?: string }) {
+function NumKey({
+  label,
+  sub,
+  onPress,
+}: {
+  label: string;
+  sub?: string;
+  onPress?: () => void;
+}) {
   return (
-    <TouchableOpacity style={styles.numKey} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.numKey} activeOpacity={0.7} onPress={onPress}>
       <Text style={styles.numKeyLabel}>{label}</Text>
       {sub ? <Text style={styles.numKeySub}>{sub}</Text> : null}
     </TouchableOpacity>
@@ -63,7 +101,46 @@ function NumKey({ label, sub }: { label: string; sub?: string }) {
 }
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
-export default function NewExpenseScreen({ onCancel }: { onCancel: () => void }) {
+export default function NewExpenseScreen({
+  onSave,
+  onCancel,
+}: {
+  onSave: (tx: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  onCancel: () => void;
+}) {
+  const [cents, setCents] = useState(0);
+  const [selectedCat, setSelectedCat] = useState<number | null>(null);
+  const [note, setNote] = useState('');
+
+  function handleDigit(d: string) {
+    setCents(prev => {
+      const next = prev * 10 + parseInt(d, 10);
+      return next > 9999999 ? prev : next;
+    });
+  }
+
+  function handleBackspace() {
+    setCents(prev => Math.floor(prev / 10));
+  }
+
+  function handleSave() {
+    if (cents === 0) {
+      Alert.alert('Missing amount', 'Please enter an amount.');
+      return;
+    }
+    if (selectedCat === null) {
+      Alert.alert('Missing category', 'Please select a category.');
+      return;
+    }
+    const cat = CATEGORIES[selectedCat];
+    onSave({
+      amountCents: cents,
+      categoryIcon: cat.icon,
+      categoryBg: cat.bg,
+      note,
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
@@ -82,31 +159,31 @@ export default function NewExpenseScreen({ onCancel }: { onCancel: () => void })
           <Text style={styles.amountLabel}>Amount</Text>
           <Text style={styles.amountSub}>Enit</Text>
         </View>
-        <Text style={styles.amountValue}>$45.50</Text>
+        <Text style={styles.amountValue}>{formatCents(cents)}</Text>
       </View>
 
       {/* ── Numpad ───────────────────────────────────────────────────────────── */}
       <View style={styles.numpad}>
         <View style={styles.numRow}>
-          <NumKey label="1" />
-          <NumKey label="2" sub="43L" />
-          <NumKey label="3" sub="746" />
+          <NumKey label="1" onPress={() => handleDigit('1')} />
+          <NumKey label="2" sub="43L" onPress={() => handleDigit('2')} />
+          <NumKey label="3" sub="746" onPress={() => handleDigit('3')} />
         </View>
         <View style={styles.numRow}>
-          <NumKey label="4" sub="145" />
-          <NumKey label="5" sub="34C" />
-          <NumKey label="6" sub="596" />
+          <NumKey label="4" sub="145" onPress={() => handleDigit('4')} />
+          <NumKey label="5" sub="34C" onPress={() => handleDigit('5')} />
+          <NumKey label="6" sub="596" onPress={() => handleDigit('6')} />
         </View>
         <View style={styles.numRow}>
-          <NumKey label="7" sub="71C" />
-          <NumKey label="8" sub="586" />
-          <NumKey label="9" sub="909" />
+          <NumKey label="7" sub="71C" onPress={() => handleDigit('7')} />
+          <NumKey label="8" sub="586" onPress={() => handleDigit('8')} />
+          <NumKey label="9" sub="909" onPress={() => handleDigit('9')} />
         </View>
         <View style={styles.numRow}>
-          <NumKey label="0" />
+          <NumKey label="0" onPress={() => handleDigit('0')} />
           {/* empty placeholder */}
           <View style={styles.numKey} />
-          <TouchableOpacity style={styles.numKey} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.numKey} activeOpacity={0.7} onPress={handleBackspace}>
             <Text style={[styles.numKeyLabel, { fontSize: 20 }]}>⌫</Text>
           </TouchableOpacity>
         </View>
@@ -121,16 +198,30 @@ export default function NewExpenseScreen({ onCancel }: { onCancel: () => void })
       {/* ── Category grid ────────────────────────────────────────────────────── */}
       <View style={styles.catGrid}>
         <View style={styles.catRow}>
-          <CategoryBtn bg="#3DAA6E" icon="💼" />
-          <CategoryBtn bg="#4A90D9" icon="🚗" />
-          <CategoryBtn bg="#7B5EA7" icon="⊞" />
-          <CategoryBtn bg="#E05C3A" icon="📥" />
+          {CATEGORIES.slice(0, 4).map((cat, i) => (
+            <CategoryBtn
+              key={i}
+              bg={cat.bg}
+              icon={cat.icon}
+              locked={cat.locked}
+              star={cat.star}
+              selected={selectedCat === i}
+              onPress={() => setSelectedCat(i)}
+            />
+          ))}
         </View>
         <View style={styles.catRow}>
-          <CategoryBtn bg="#2BB5A0" icon="💾" />
-          <CategoryBtn bg="#C9A84C" icon="👑" />
-          <CategoryBtn bg="#4A4F60" icon="📊" locked />
-          <CategoryBtn bg="#2E3245" icon="⭐" locked star />
+          {CATEGORIES.slice(4).map((cat, i) => (
+            <CategoryBtn
+              key={i + 4}
+              bg={cat.bg}
+              icon={cat.icon}
+              locked={cat.locked}
+              star={cat.star}
+              selected={selectedCat === i + 4}
+              onPress={() => setSelectedCat(i + 4)}
+            />
+          ))}
         </View>
       </View>
 
@@ -146,7 +237,8 @@ export default function NewExpenseScreen({ onCancel }: { onCancel: () => void })
           style={styles.notesInput}
           placeholder="Notes"
           placeholderTextColor={C.gray}
-          editable={false}
+          value={note}
+          onChangeText={setNote}
         />
         <TouchableOpacity activeOpacity={0.7} style={styles.cameraBtn}>
           <Text style={{ fontSize: 18, color: C.gray }}>📷</Text>
@@ -155,7 +247,7 @@ export default function NewExpenseScreen({ onCancel }: { onCancel: () => void })
 
       {/* ── Action buttons ───────────────────────────────────────────────────── */}
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85} onPress={handleSave}>
           <Text style={styles.saveBtnText}>Save</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -285,6 +377,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  catBtnSelected: {
+    borderWidth: 2,
+    borderColor: C.teal,
   },
   catIcon: {
     fontSize: 22,
