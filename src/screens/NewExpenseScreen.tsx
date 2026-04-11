@@ -25,13 +25,13 @@ const C = {
 
 // ─── Category definitions ─────────────────────────────────────────────────────
 const CATEGORIES = [
-  { icon: '💼', bg: '#3DAA6E', locked: false, star: false, label: 'Housing'   },
+  { icon: '🏠', bg: '#3DAA6E', locked: false, star: false, label: 'Housing'   },
   { icon: '🚗', bg: '#4A90D9', locked: false, star: false, label: 'Transport' },
-  { icon: '⊞',  bg: '#7B5EA7', locked: false, star: false, label: 'Food'      },
+  { icon: '🍽️', bg: '#7B5EA7', locked: false, star: false, label: 'Food'      },
   { icon: '📥', bg: '#E05C3A', locked: false, star: false, label: 'Utilities' },
-  { icon: '💾', bg: '#2BB5A0', locked: false, star: false, label: 'Health'    },
-  { icon: '👑', bg: '#C9A84C', locked: false, star: false, label: 'Fun'       },
-  { icon: '📊', bg: '#4A4F60', locked: true,  star: false, label: 'Other'     },
+  { icon: '❤️', bg: '#2BB5A0', locked: false, star: false, label: 'Health'    },
+  { icon: '🎉', bg: '#C9A84C', locked: false, star: false, label: 'Fun'       },
+  { icon: '📦', bg: '#4A4F60', locked: false, star: false, label: 'Other'     },
   { icon: '⭐', bg: '#2E3245', locked: true,  star: true,  label: 'Premium'   },
 ];
 
