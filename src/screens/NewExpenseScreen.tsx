@@ -25,14 +25,14 @@ const C = {
 
 // ─── Category definitions ─────────────────────────────────────────────────────
 const CATEGORIES = [
-  { icon: '💼', bg: '#3DAA6E', locked: false, star: false },
-  { icon: '🚗', bg: '#4A90D9', locked: false, star: false },
-  { icon: '⊞',  bg: '#7B5EA7', locked: false, star: false },
-  { icon: '📥', bg: '#E05C3A', locked: false, star: false },
-  { icon: '💾', bg: '#2BB5A0', locked: false, star: false },
-  { icon: '👑', bg: '#C9A84C', locked: false, star: false },
-  { icon: '📊', bg: '#4A4F60', locked: true,  star: false },
-  { icon: '⭐', bg: '#2E3245', locked: true,  star: true  },
+  { icon: '💼', bg: '#3DAA6E', locked: false, star: false, label: 'Housing'   },
+  { icon: '🚗', bg: '#4A90D9', locked: false, star: false, label: 'Transport' },
+  { icon: '⊞',  bg: '#7B5EA7', locked: false, star: false, label: 'Food'      },
+  { icon: '📥', bg: '#E05C3A', locked: false, star: false, label: 'Utilities' },
+  { icon: '💾', bg: '#2BB5A0', locked: false, star: false, label: 'Health'    },
+  { icon: '👑', bg: '#C9A84C', locked: false, star: false, label: 'Fun'       },
+  { icon: '📊', bg: '#4A4F60', locked: true,  star: false, label: 'Other'     },
+  { icon: '⭐', bg: '#2E3245', locked: true,  star: true,  label: 'Premium'   },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,6 +46,7 @@ function formatCents(cents: number): string {
 function CategoryBtn({
   bg,
   icon,
+  label,
   locked,
   star,
   selected,
@@ -53,32 +54,36 @@ function CategoryBtn({
 }: {
   bg: string;
   icon: string;
+  label: string;
   locked?: boolean;
   star?: boolean;
   selected?: boolean;
   onPress?: () => void;
 }) {
   return (
-    <TouchableOpacity
-      style={[
-        styles.catBtn,
-        { backgroundColor: bg },
-        selected && styles.catBtnSelected,
-      ]}
-      activeOpacity={locked ? 1 : 0.75}
-      onPress={locked ? undefined : onPress}>
-      <Text style={styles.catIcon}>{icon}</Text>
-      {locked && (
-        <View style={styles.lockBadge}>
-          <Text style={{ fontSize: 8, color: C.white }}>🔒</Text>
-        </View>
-      )}
-      {star && (
-        <View style={styles.starBadge}>
-          <Text style={{ fontSize: 8, color: '#FFD700' }}>★</Text>
-        </View>
-      )}
-    </TouchableOpacity>
+    <View style={styles.catBtnWrapper}>
+      <TouchableOpacity
+        style={[
+          styles.catBtn,
+          { backgroundColor: bg },
+          selected && styles.catBtnSelected,
+        ]}
+        activeOpacity={locked ? 1 : 0.75}
+        onPress={locked ? undefined : onPress}>
+        <Text style={styles.catIcon}>{icon}</Text>
+        {locked && (
+          <View style={styles.lockBadge}>
+            <Text style={{ fontSize: 8, color: C.white }}>🔒</Text>
+          </View>
+        )}
+        {star && (
+          <View style={styles.starBadge}>
+            <Text style={{ fontSize: 8, color: '#FFD700' }}>★</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+      <Text style={styles.catLabel}>{label}</Text>
+    </View>
   );
 }
 
@@ -203,6 +208,7 @@ export default function NewExpenseScreen({
               key={i}
               bg={cat.bg}
               icon={cat.icon}
+              label={cat.label}
               locked={cat.locked}
               star={cat.star}
               selected={selectedCat === i}
@@ -216,6 +222,7 @@ export default function NewExpenseScreen({
               key={i + 4}
               bg={cat.bg}
               icon={cat.icon}
+              label={cat.label}
               locked={cat.locked}
               star={cat.star}
               selected={selectedCat === i + 4}
@@ -371,12 +378,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  catBtnWrapper: {
+    alignItems: 'center',
+    gap: 4,
+  },
   catBtn: {
     width: 60,
     height: 60,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  catLabel: {
+    color: C.gray,
+    fontSize: 11,
+    fontWeight: '500',
   },
   catBtnSelected: {
     borderWidth: 2,
