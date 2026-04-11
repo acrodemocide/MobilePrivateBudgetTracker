@@ -185,9 +185,8 @@ export default function NewExpenseScreen({
           <NumKey label="9" sub="909" onPress={() => handleDigit('9')} />
         </View>
         <View style={styles.numRow}>
+          <View style={{ flex: 1, margin: 3 }} />
           <NumKey label="0" onPress={() => handleDigit('0')} />
-          {/* empty placeholder */}
-          <View style={styles.numKey} />
           <TouchableOpacity style={styles.numKey} activeOpacity={0.7} onPress={handleBackspace}>
             <Text style={[styles.numKeyLabel, { fontSize: 20 }]}>⌫</Text>
           </TouchableOpacity>
