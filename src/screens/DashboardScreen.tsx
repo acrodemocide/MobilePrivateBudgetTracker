@@ -242,7 +242,10 @@ export default function DashboardScreen({
         {transactions.length === 0 ? (
           <Text style={styles.emptyText}>No transactions yet</Text>
         ) : (
-          transactions.map(tx => (
+          [...transactions]
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(0, 6)
+            .map(tx => (
             <View key={tx.id} style={styles.txRow}>
               <TxIcon bg={tx.categoryBg} label={tx.categoryIcon} />
               <View style={{ flex: 1, marginLeft: 12 }}>
