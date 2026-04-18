@@ -46,3 +46,7 @@ export function insertTransaction(
     createdAt: new Date(createdAt),
   };
 }
+
+export function deleteTransaction(id: number): void {
+  db.executeSync('DELETE FROM transactions WHERE id = ?;', [id]);
+}

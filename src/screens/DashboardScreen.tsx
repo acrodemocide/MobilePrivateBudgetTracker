@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Transaction } from '../types';
 
 function formatAmount(cents: number): string {
@@ -162,14 +164,47 @@ function NavTab({
   );
 }
 
+// ─── Swipeable delete action ──────────────────────────────────────────────────
+function DeleteAction({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.deleteAction} activeOpacity={0.85} onPress={onPress}>
+      <Text style={styles.deleteActionIcon}>🗑</Text>
+      <Text style={styles.deleteActionLabel}>Delete</Text>
+    </TouchableOpacity>
+  );
+}
+
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function DashboardScreen({
   transactions,
   onAddExpense,
+  onDeleteTransaction,
 }: {
   transactions: Transaction[];
   onAddExpense: () => void;
+  onDeleteTransaction: (id: number) => void;
 }) {
+
+  const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
+
+  function confirmDelete(tx: Transaction) {
+    Alert.alert(
+      'Delete transaction?',
+      `${formatAmount(tx.amountCents)}${tx.note ? ` · ${tx.note}` : ''} will be permanently removed.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => swipeableRefs.current.get(tx.id)?.close(),
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => onDeleteTransaction(tx.id),
+        },
+      ],
+    );
+  }
 
   const now = new Date();
   const spentThisMonthCents = transactions
@@ -255,14 +290,26 @@ export default function DashboardScreen({
             .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             .slice(0, 6)
             .map(tx => (
-            <View key={tx.id} style={styles.txRow}>
-              <TxIcon bg={tx.categoryBg} label={tx.categoryIcon} />
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.txAmount}>{formatAmount(tx.amountCents)}</Text>
-                <Text style={styles.txAge}>{tx.note || 'No note'}</Text>
+            <Swipeable
+              key={tx.id}
+              ref={ref => {
+                if (ref) {swipeableRefs.current.set(tx.id, ref);}
+                else {swipeableRefs.current.delete(tx.id);}
+              }}
+              renderRightActions={() => (
+                <DeleteAction onPress={() => confirmDelete(tx)} />
+              )}
+              rightThreshold={40}
+              overshootRight={false}>
+              <View style={styles.txRow}>
+                <TxIcon bg={tx.categoryBg} label={tx.categoryIcon} />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.txAmount}>{formatAmount(tx.amountCents)}</Text>
+                  <Text style={styles.txAge}>{tx.note || 'No note'}</Text>
+                </View>
+                <Text style={styles.txTime}>{formatTime(tx.createdAt)}</Text>
               </View>
-              <Text style={styles.txTime}>{formatTime(tx.createdAt)}</Text>
-            </View>
+            </Swipeable>
           ))
         )}
 
@@ -412,6 +459,26 @@ const styles = StyleSheet.create({
     color: C.white,
     fontSize: 15,
     fontWeight: '700',
+  },
+
+  // Swipe-to-delete
+  deleteAction: {
+    backgroundColor: '#FF4B55',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 12,
+    marginBottom: 18,
+    marginLeft: 8,
+  },
+  deleteActionIcon: {
+    fontSize: 18,
+  },
+  deleteActionLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
   },
 
   // Transactions
