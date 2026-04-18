@@ -39,7 +39,7 @@ const CATEGORIES = [
 function formatCents(cents: number): string {
   const dollars = Math.floor(cents / 100);
   const centsStr = (cents % 100).toString().padStart(2, '0');
-  return `$${dollars}.${centsStr}`;
+  return `$${dollars.toLocaleString()}.${centsStr}`;
 }
 
 // ─── Category icon button ─────────────────────────────────────────────────────

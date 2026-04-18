@@ -171,6 +171,15 @@ export default function DashboardScreen({
   onAddExpense: () => void;
 }) {
 
+  const now = new Date();
+  const spentThisMonthCents = transactions
+    .filter(
+      tx =>
+        tx.createdAt.getFullYear() === now.getFullYear() &&
+        tx.createdAt.getMonth() === now.getMonth(),
+    )
+    .reduce((sum, tx) => sum + tx.amountCents, 0);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
@@ -196,7 +205,7 @@ export default function DashboardScreen({
         <View style={styles.spentCard}>
           <View style={{ flex: 1 }}>
             <Text style={styles.spentLabel}>Spent this month</Text>
-            <Text style={styles.spentAmount}>$1,245</Text>
+            <Text style={styles.spentAmount}>{formatAmount(spentThisMonthCents)}</Text>
             <Text style={styles.spentSub}>$2,000</Text>
             <Text style={styles.spentSubLabel}>Quick Summary</Text>
           </View>
@@ -236,7 +245,7 @@ export default function DashboardScreen({
         {/* ── Recent Transactions ──────────────────────────────────────────── */}
         <View style={styles.txHeader}>
           <Text style={styles.txTitle}>Recent Transactions</Text>
-          <Text style={styles.txFilter}>Teall</Text>
+          <Text style={styles.txFilter}>See all</Text>
         </View>
 
         {transactions.length === 0 ? (
