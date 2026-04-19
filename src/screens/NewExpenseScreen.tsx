@@ -109,13 +109,19 @@ function NumKey({
 export default function NewExpenseScreen({
   onSave,
   onCancel,
+  existingTransaction,
 }: {
   onSave: (tx: Omit<Transaction, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
+  existingTransaction?: Transaction;
 }) {
-  const [cents, setCents] = useState(0);
-  const [selectedCat, setSelectedCat] = useState<number | null>(null);
-  const [note, setNote] = useState('');
+  const initCatIdx = existingTransaction
+    ? CATEGORIES.findIndex(c => c.icon === existingTransaction.categoryIcon)
+    : -1;
+
+  const [cents, setCents] = useState(existingTransaction?.amountCents ?? 0);
+  const [selectedCat, setSelectedCat] = useState<number | null>(initCatIdx >= 0 ? initCatIdx : null);
+  const [note, setNote] = useState(existingTransaction?.note ?? '');
 
   function handleDigit(d: string) {
     setCents(prev => {
@@ -152,7 +158,7 @@ export default function NewExpenseScreen({
 
       {/* ── Header ───────────────────────────────────────────────────────────── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>New Expense</Text>
+        <Text style={styles.headerTitle}>{existingTransaction ? 'Edit Expense' : 'New Expense'}</Text>
         <TouchableOpacity activeOpacity={0.7}>
           <Text style={styles.starIcon}>☆</Text>
         </TouchableOpacity>

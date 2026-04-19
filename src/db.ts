@@ -47,6 +47,16 @@ export function insertTransaction(
   };
 }
 
+export function updateTransaction(
+  id: number,
+  tx: Omit<Transaction, 'id' | 'createdAt'>,
+): void {
+  db.executeSync(
+    'UPDATE transactions SET amount_cents = ?, category_icon = ?, category_bg = ?, note = ? WHERE id = ?;',
+    [tx.amountCents, tx.categoryIcon, tx.categoryBg, tx.note, id],
+  );
+}
+
 export function deleteTransaction(id: number): void {
   db.executeSync('DELETE FROM transactions WHERE id = ?;', [id]);
 }

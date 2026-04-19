@@ -179,10 +179,12 @@ export default function DashboardScreen({
   transactions,
   onAddExpense,
   onDeleteTransaction,
+  onEditTransaction,
 }: {
   transactions: Transaction[];
   onAddExpense: () => void;
   onDeleteTransaction: (id: number) => void;
+  onEditTransaction: (tx: Transaction) => void;
 }) {
 
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
@@ -301,14 +303,17 @@ export default function DashboardScreen({
               )}
               rightThreshold={40}
               overshootRight={false}>
-              <View style={styles.txRow}>
+              <TouchableOpacity
+                style={styles.txRow}
+                activeOpacity={0.7}
+                onPress={() => onEditTransaction(tx)}>
                 <TxIcon bg={tx.categoryBg} label={tx.categoryIcon} />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.txAmount}>{formatAmount(tx.amountCents)}</Text>
                   <Text style={styles.txAge}>{tx.note || 'No note'}</Text>
                 </View>
                 <Text style={styles.txTime}>{formatTime(tx.createdAt)}</Text>
-              </View>
+              </TouchableOpacity>
             </Swipeable>
           ))
         )}
