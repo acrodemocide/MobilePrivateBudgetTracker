@@ -3,11 +3,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DashboardScreen from './src/screens/DashboardScreen';
 import NewExpenseScreen from './src/screens/NewExpenseScreen';
+import TransactionsScreen from './src/screens/TransactionsScreen';
 import { Transaction } from './src/types';
 import { initDB, insertTransaction, loadTransactions, deleteTransaction, updateTransaction } from './src/db';
 
 export default function App() {
-  const [screen, setScreen] = useState<'dashboard' | 'newExpense'>('dashboard');
+  const [screen, setScreen] = useState<'dashboard' | 'transactions' | 'newExpense'>('dashboard');
+  const [returnScreen, setReturnScreen] = useState<'dashboard' | 'transactions'>('dashboard');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
@@ -27,16 +29,17 @@ export default function App() {
       const saved = insertTransaction(tx);
       setTransactions(prev => [saved, ...prev]);
     }
-    setScreen('dashboard');
+    setScreen(returnScreen);
   }
 
   function handleCancel() {
     setEditingTransaction(null);
-    setScreen('dashboard');
+    setScreen(returnScreen);
   }
 
-  function handleEdit(tx: Transaction) {
+  function handleEdit(tx: Transaction, from: 'dashboard' | 'transactions') {
     setEditingTransaction(tx);
+    setReturnScreen(from);
     setScreen('newExpense');
   }
 
@@ -51,9 +54,17 @@ export default function App() {
       {screen === 'dashboard' ? (
         <DashboardScreen
           transactions={transactions}
-          onAddExpense={() => setScreen('newExpense')}
+          onAddExpense={() => { setReturnScreen('dashboard'); setScreen('newExpense'); }}
           onDeleteTransaction={handleDelete}
-          onEditTransaction={handleEdit}
+          onEditTransaction={tx => handleEdit(tx, 'dashboard')}
+          onNavigateToTransactions={() => setScreen('transactions')}
+        />
+      ) : screen === 'transactions' ? (
+        <TransactionsScreen
+          transactions={transactions}
+          onDeleteTransaction={handleDelete}
+          onEditTransaction={tx => handleEdit(tx, 'transactions')}
+          onNavigateToDashboard={() => setScreen('dashboard')}
         />
       ) : (
         <NewExpenseScreen

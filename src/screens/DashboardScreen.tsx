@@ -145,13 +145,15 @@ function NavTab({
   icon,
   label,
   active,
+  onPress,
 }: {
   icon: string;
   label: string;
   active?: boolean;
+  onPress?: () => void;
 }) {
   return (
-    <TouchableOpacity style={styles.navTab} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.navTab} activeOpacity={0.7} onPress={onPress}>
       <Text style={{ fontSize: 20, color: active ? C.teal : C.gray }}>{icon}</Text>
       <Text
         style={[
@@ -180,11 +182,13 @@ export default function DashboardScreen({
   onAddExpense,
   onDeleteTransaction,
   onEditTransaction,
+  onNavigateToTransactions,
 }: {
   transactions: Transaction[];
   onAddExpense: () => void;
   onDeleteTransaction: (id: number) => void;
   onEditTransaction: (tx: Transaction) => void;
+  onNavigateToTransactions: () => void;
 }) {
 
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
@@ -282,7 +286,7 @@ export default function DashboardScreen({
         {/* ── Recent Transactions ──────────────────────────────────────────── */}
         <View style={styles.txHeader}>
           <Text style={styles.txTitle}>Recent Transactions</Text>
-          <Text style={styles.txFilter}>See all</Text>
+          <Text style={styles.txFilter} onPress={onNavigateToTransactions}>See all</Text>
         </View>
 
         {transactions.length === 0 ? (
@@ -330,7 +334,7 @@ export default function DashboardScreen({
       {/* ── Bottom Nav ───────────────────────────────────────────────────────── */}
       <View style={styles.bottomNav}>
         <NavTab icon="🏠" label="Home"         active />
-        <NavTab icon="⊞"  label="Transactions"         />
+        <NavTab icon="⊞"  label="Transactions" onPress={onNavigateToTransactions} />
         <NavTab icon="📊" label="Budgets"               />
         <NavTab icon="📈" label="Reports"               />
         <NavTab icon="···" label="More"                  />
