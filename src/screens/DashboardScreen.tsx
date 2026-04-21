@@ -46,9 +46,13 @@ function CircularProgress({ pct }: { pct: number }) {
   const size = 92;
   const half = size / 2;
   const bw = 8;
-  const angle = (pct / 100) * 360;
-  const rightDeg = Math.min(angle, 180);
-  const leftDeg = Math.max(angle - 180, 0);
+
+  // Each half uses a HALF ring (only 2 of 4 border sides colored) so that
+  // rotating it actually changes the visible arc inside the clip.
+  // The seam points for borderTop+borderRight are at ±135° from the top, so
+  // we offset the rotation by -135° to align the arc correctly with the clip.
+  const rightAngle = (Math.min(pct, 50) / 50) * 180 - 135;
+  const leftAngle  = (Math.max(pct - 50, 0) / 50) * 180 - 135;
 
   return (
     <View style={{ width: size, height: size }}>
@@ -65,7 +69,7 @@ function CircularProgress({ pct }: { pct: number }) {
             borderColor: 'rgba(255,255,255,0.18)',
           }}
         />
-        {/* Right half (0–50%) */}
+        {/* Right half (0–50%): top+right borders teal, bottom+left transparent */}
         <View
           style={{
             position: 'absolute',
@@ -80,35 +84,39 @@ function CircularProgress({ pct }: { pct: number }) {
               height: size,
               borderRadius: half,
               borderWidth: bw,
-              borderColor: C.teal,
+              borderTopColor: C.teal,
+              borderRightColor: C.teal,
+              borderBottomColor: 'transparent',
+              borderLeftColor: 'transparent',
               position: 'absolute',
               left: -half,
-              transform: [{ rotate: `${rightDeg - 180}deg` }],
+              transform: [{ rotate: `${rightAngle}deg` }],
             }}
           />
         </View>
-        {/* Left half (50–100%) */}
-        {angle > 180 && (
+        {/* Left half (50–100%): bottom+left borders teal, top+right transparent */}
+        <View
+          style={{
+            position: 'absolute',
+            width: half,
+            height: size,
+            overflow: 'hidden',
+          }}>
           <View
             style={{
-              position: 'absolute',
-              width: half,
+              width: size,
               height: size,
-              overflow: 'hidden',
-            }}>
-            <View
-              style={{
-                width: size,
-                height: size,
-                borderRadius: half,
-                borderWidth: bw,
-                borderColor: C.teal,
-                position: 'absolute',
-                transform: [{ rotate: `${leftDeg - 180}deg` }],
-              }}
-            />
-          </View>
-        )}
+              borderRadius: half,
+              borderWidth: bw,
+              borderTopColor: 'transparent',
+              borderRightColor: 'transparent',
+              borderBottomColor: C.teal,
+              borderLeftColor: C.teal,
+              position: 'absolute',
+              transform: [{ rotate: `${leftAngle}deg` }],
+            }}
+          />
+        </View>
       </View>
       {/* Center label (not rotated) */}
       <View
@@ -212,6 +220,8 @@ export default function DashboardScreen({
     );
   }
 
+  const budgetCents = 200000; // $2,000.00
+
   const now = new Date();
   const spentThisMonthCents = transactions
     .filter(
@@ -220,6 +230,8 @@ export default function DashboardScreen({
         tx.createdAt.getMonth() === now.getMonth(),
     )
     .reduce((sum, tx) => sum + tx.amountCents, 0);
+
+  const budgetPct = Math.min(Math.round((spentThisMonthCents / budgetCents) * 100), 100);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -247,10 +259,10 @@ export default function DashboardScreen({
           <View style={{ flex: 1 }}>
             <Text style={styles.spentLabel}>Spent this month</Text>
             <Text style={styles.spentAmount}>{formatAmount(spentThisMonthCents)}</Text>
-            <Text style={styles.spentSub}>$2,000</Text>
-            <Text style={styles.spentSubLabel}>Quick Summary</Text>
+            <Text style={styles.spentSub}>{formatAmount(budgetCents)}</Text>
+            <Text style={styles.spentSubLabel}>Budget</Text>
           </View>
-          <CircularProgress pct={62} />
+          <CircularProgress pct={budgetPct} />
         </View>
 
         {/* ── Income / Savings cards ───────────────────────────────────────── */}
