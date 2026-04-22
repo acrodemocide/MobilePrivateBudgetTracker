@@ -4,12 +4,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DashboardScreen from './src/screens/DashboardScreen';
 import NewExpenseScreen from './src/screens/NewExpenseScreen';
 import TransactionsScreen from './src/screens/TransactionsScreen';
+import BudgetsScreen from './src/screens/BudgetsScreen';
 import { Transaction } from './src/types';
 import { initDB, insertTransaction, loadTransactions, deleteTransaction, updateTransaction } from './src/db';
 
 export default function App() {
-  const [screen, setScreen] = useState<'dashboard' | 'transactions' | 'newExpense'>('dashboard');
+  const [screen, setScreen] = useState<'dashboard' | 'transactions' | 'newExpense' | 'budgets'>('dashboard');
   const [returnScreen, setReturnScreen] = useState<'dashboard' | 'transactions'>('dashboard');
+  const [incomeCents, setIncomeCents] = useState(124000);
+  const [budgetCents, setBudgetCents] = useState(200000);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
@@ -54,10 +57,13 @@ export default function App() {
       {screen === 'dashboard' ? (
         <DashboardScreen
           transactions={transactions}
+          incomeCents={incomeCents}
+          budgetCents={budgetCents}
           onAddExpense={() => { setReturnScreen('dashboard'); setScreen('newExpense'); }}
           onDeleteTransaction={handleDelete}
           onEditTransaction={tx => handleEdit(tx, 'dashboard')}
           onNavigateToTransactions={() => setScreen('transactions')}
+          onNavigateToBudgets={() => setScreen('budgets')}
         />
       ) : screen === 'transactions' ? (
         <TransactionsScreen
@@ -65,6 +71,19 @@ export default function App() {
           onDeleteTransaction={handleDelete}
           onEditTransaction={tx => handleEdit(tx, 'transactions')}
           onNavigateToDashboard={() => setScreen('dashboard')}
+          onNavigateToBudgets={() => setScreen('budgets')}
+        />
+      ) : screen === 'budgets' ? (
+        <BudgetsScreen
+          incomeCents={incomeCents}
+          budgetCents={budgetCents}
+          onSave={(income, budget) => {
+            setIncomeCents(income);
+            setBudgetCents(budget);
+            setScreen('dashboard');
+          }}
+          onNavigateToDashboard={() => setScreen('dashboard')}
+          onNavigateToTransactions={() => setScreen('transactions')}
         />
       ) : (
         <NewExpenseScreen

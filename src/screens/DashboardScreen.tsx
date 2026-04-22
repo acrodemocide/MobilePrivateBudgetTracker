@@ -187,16 +187,22 @@ function DeleteAction({ onPress }: { onPress: () => void }) {
 // ─── Main screen ─────────────────────────────────────────────────────────────
 export default function DashboardScreen({
   transactions,
+  incomeCents,
+  budgetCents,
   onAddExpense,
   onDeleteTransaction,
   onEditTransaction,
   onNavigateToTransactions,
+  onNavigateToBudgets,
 }: {
   transactions: Transaction[];
+  incomeCents: number;
+  budgetCents: number;
   onAddExpense: () => void;
   onDeleteTransaction: (id: number) => void;
   onEditTransaction: (tx: Transaction) => void;
   onNavigateToTransactions: () => void;
+  onNavigateToBudgets: () => void;
 }) {
 
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
@@ -220,8 +226,6 @@ export default function DashboardScreen({
     );
   }
 
-  const budgetCents = 200000; // $2,000.00
-
   const now = new Date();
   const spentThisMonthCents = transactions
     .filter(
@@ -231,6 +235,7 @@ export default function DashboardScreen({
     )
     .reduce((sum, tx) => sum + tx.amountCents, 0);
 
+  const savingsCents = incomeCents - spentThisMonthCents;
   const budgetPct = Math.min(Math.round((spentThisMonthCents / budgetCents) * 100), 100);
 
   return (
@@ -243,11 +248,10 @@ export default function DashboardScreen({
           <Text style={styles.headerBtnText}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>TrackPrivate</Text>
-        <TouchableOpacity style={styles.searchBtn} activeOpacity={0.7}>
-          <Text style={{ color: C.white, fontSize: 16 }}>🔍</Text>
-        </TouchableOpacity>
       </View>
-      <Text style={styles.monthLabel}>March 2026</Text>
+      <Text style={styles.monthLabel}>
+        {now.toLocaleString('default', { month: 'long', year: 'numeric' })}
+      </Text>
 
       <ScrollView
         style={styles.scroll}
@@ -277,7 +281,7 @@ export default function DashboardScreen({
             </View>
             <View style={styles.miniCardFooter}>
               <Text style={styles.miniCardIcon}>⏱</Text>
-              <Text style={styles.miniCardAmount}>$1,240</Text>
+              <Text style={styles.miniCardAmount}>{formatAmount(incomeCents)}</Text>
             </View>
           </View>
           {/* Savings */}
@@ -290,7 +294,7 @@ export default function DashboardScreen({
             </View>
             <View style={styles.miniCardFooter}>
               <Text style={styles.miniCardIcon}>🐷</Text>
-              <Text style={styles.miniCardAmount}>$1,340</Text>
+              <Text style={styles.miniCardAmount}>{formatAmount(Math.max(savingsCents, 0))}</Text>
             </View>
           </View>
         </View>
@@ -347,9 +351,8 @@ export default function DashboardScreen({
       <View style={styles.bottomNav}>
         <NavTab icon="🏠" label="Home"         active />
         <NavTab icon="⊞"  label="Transactions" onPress={onNavigateToTransactions} />
-        <NavTab icon="📊" label="Budgets"               />
+        <NavTab icon="📊" label="Budgets" onPress={onNavigateToBudgets} />
         <NavTab icon="📈" label="Reports"               />
-        <NavTab icon="···" label="More"                  />
       </View>
     </SafeAreaView>
   );
@@ -385,14 +388,6 @@ const styles = StyleSheet.create({
     color: C.white,
     fontSize: 18,
     fontWeight: '700',
-  },
-  searchBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: C.card,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   monthLabel: {
     textAlign: 'center',

@@ -82,11 +82,13 @@ export default function TransactionsScreen({
   onDeleteTransaction,
   onEditTransaction,
   onNavigateToDashboard,
+  onNavigateToBudgets,
 }: {
   transactions: Transaction[];
   onDeleteTransaction: (id: number) => void;
   onEditTransaction: (tx: Transaction) => void;
   onNavigateToDashboard: () => void;
+  onNavigateToBudgets: () => void;
 }) {
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
@@ -230,9 +232,8 @@ export default function TransactionsScreen({
       <View style={styles.bottomNav}>
         <NavTab icon="🏠"  label="Home"         onPress={onNavigateToDashboard} />
         <NavTab icon="⊞"   label="Transactions" active />
-        <NavTab icon="📊"  label="Budgets"       />
+        <NavTab icon="📊"  label="Budgets"       onPress={onNavigateToBudgets} />
         <NavTab icon="📈"  label="Reports"       />
-        <NavTab icon="···" label="More"          />
       </View>
     </SafeAreaView>
   );
