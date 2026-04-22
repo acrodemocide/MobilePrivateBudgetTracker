@@ -194,6 +194,7 @@ export default function DashboardScreen({
   onEditTransaction,
   onNavigateToTransactions,
   onNavigateToBudgets,
+  onNavigateToReports,
 }: {
   transactions: Transaction[];
   incomeCents: number;
@@ -203,6 +204,7 @@ export default function DashboardScreen({
   onEditTransaction: (tx: Transaction) => void;
   onNavigateToTransactions: () => void;
   onNavigateToBudgets: () => void;
+  onNavigateToReports: () => void;
 }) {
 
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
@@ -350,9 +352,9 @@ export default function DashboardScreen({
       {/* ── Bottom Nav ───────────────────────────────────────────────────────── */}
       <View style={styles.bottomNav}>
         <NavTab icon="🏠" label="Home"         active />
-        <NavTab icon="⊞"  label="Transactions" onPress={onNavigateToTransactions} />
+        <NavTab icon="💳"  label="Transactions" onPress={onNavigateToTransactions} />
         <NavTab icon="📊" label="Budgets" onPress={onNavigateToBudgets} />
-        <NavTab icon="📈" label="Reports"               />
+        <NavTab icon="📈" label="Reports" onPress={onNavigateToReports} />
       </View>
     </SafeAreaView>
   );

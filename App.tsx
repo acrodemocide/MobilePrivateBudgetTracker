@@ -5,11 +5,12 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import NewExpenseScreen from './src/screens/NewExpenseScreen';
 import TransactionsScreen from './src/screens/TransactionsScreen';
 import BudgetsScreen from './src/screens/BudgetsScreen';
+import ReportsScreen from './src/screens/ReportsScreen';
 import { Transaction } from './src/types';
 import { initDB, insertTransaction, loadTransactions, deleteTransaction, updateTransaction } from './src/db';
 
 export default function App() {
-  const [screen, setScreen] = useState<'dashboard' | 'transactions' | 'newExpense' | 'budgets'>('dashboard');
+  const [screen, setScreen] = useState<'dashboard' | 'transactions' | 'newExpense' | 'budgets' | 'reports'>('dashboard');
   const [returnScreen, setReturnScreen] = useState<'dashboard' | 'transactions'>('dashboard');
   const [incomeCents, setIncomeCents] = useState(124000);
   const [budgetCents, setBudgetCents] = useState(200000);
@@ -64,6 +65,7 @@ export default function App() {
           onEditTransaction={tx => handleEdit(tx, 'dashboard')}
           onNavigateToTransactions={() => setScreen('transactions')}
           onNavigateToBudgets={() => setScreen('budgets')}
+          onNavigateToReports={() => setScreen('reports')}
         />
       ) : screen === 'transactions' ? (
         <TransactionsScreen
@@ -72,6 +74,7 @@ export default function App() {
           onEditTransaction={tx => handleEdit(tx, 'transactions')}
           onNavigateToDashboard={() => setScreen('dashboard')}
           onNavigateToBudgets={() => setScreen('budgets')}
+          onNavigateToReports={() => setScreen('reports')}
         />
       ) : screen === 'budgets' ? (
         <BudgetsScreen
@@ -84,6 +87,16 @@ export default function App() {
           }}
           onNavigateToDashboard={() => setScreen('dashboard')}
           onNavigateToTransactions={() => setScreen('transactions')}
+          onNavigateToReports={() => setScreen('reports')}
+        />
+      ) : screen === 'reports' ? (
+        <ReportsScreen
+          transactions={transactions}
+          incomeCents={incomeCents}
+          budgetCents={budgetCents}
+          onNavigateToDashboard={() => setScreen('dashboard')}
+          onNavigateToTransactions={() => setScreen('transactions')}
+          onNavigateToBudgets={() => setScreen('budgets')}
         />
       ) : (
         <NewExpenseScreen

@@ -87,12 +87,14 @@ export default function BudgetsScreen({
   onSave,
   onNavigateToDashboard,
   onNavigateToTransactions,
+  onNavigateToReports,
 }: {
   incomeCents: number;
   budgetCents: number;
   onSave: (incomeCents: number, budgetCents: number) => void;
   onNavigateToDashboard: () => void;
   onNavigateToTransactions: () => void;
+  onNavigateToReports: () => void;
 }) {
   const [incomeRaw, setIncomeRaw] = useState(dollarsFromCents(incomeCents));
   const [budgetRaw, setBudgetRaw] = useState(dollarsFromCents(budgetCents));
@@ -156,9 +158,9 @@ export default function BudgetsScreen({
 
       <View style={styles.bottomNav}>
         <NavTab icon="🏠" label="Home"         onPress={onNavigateToDashboard} />
-        <NavTab icon="⊞"  label="Transactions" onPress={onNavigateToTransactions} />
+        <NavTab icon="💳"  label="Transactions" onPress={onNavigateToTransactions} />
         <NavTab icon="📊" label="Budgets"       active />
-        <NavTab icon="📈" label="Reports"                />
+        <NavTab icon="📈" label="Reports"       onPress={onNavigateToReports} />
       </View>
     </SafeAreaView>
   );
