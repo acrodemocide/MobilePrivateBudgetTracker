@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Transaction } from '../types';
@@ -24,14 +25,20 @@ const C = {
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+const CAT_LABELS: Record<string, string> = {
+  '🏠': 'Housing',
+  '🚗': 'Transport',
+  '🍽️': 'Food',
+  '📥': 'Utilities',
+  '❤️': 'Health',
+  '🎉': 'Fun',
+  '📦': 'Other',
+};
+
 function formatAmount(cents: number): string {
   const dollars = Math.floor(cents / 100);
   const c = (cents % 100).toString().padStart(2, '0');
   return `$${dollars.toLocaleString()}.${c}`;
-}
-
-function monthKey(year: number, month: number): string {
-  return `${year}-${month}`;
 }
 
 function spentInMonth(transactions: Transaction[], year: number, month: number): number {
@@ -61,16 +68,13 @@ function MonthlySummary({
 }) {
   const now = new Date();
   const thisMonth = spentInMonth(transactions, now.getFullYear(), now.getMonth());
-
   const lastDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonth = spentInMonth(transactions, lastDate.getFullYear(), lastDate.getMonth());
-
   const diff = thisMonth - lastMonth;
   const diffLabel = lastMonth === 0
     ? null
     : `${diff >= 0 ? '+' : ''}${formatAmount(Math.abs(diff))} vs last month`;
   const diffColor = diff <= 0 ? C.teal : C.red;
-
   const budgetPct = Math.min((thisMonth / budgetCents) * 100, 100);
 
   return (
@@ -93,7 +97,6 @@ function MonthlySummary({
             </Text>
           </View>
         </View>
-        {/* Budget progress bar */}
         <View style={styles.progressBg}>
           <View style={[styles.progressFill, { width: `${budgetPct}%` as any, backgroundColor: budgetPct >= 90 ? C.red : C.teal }]} />
         </View>
@@ -122,12 +125,11 @@ function SpendingByCategory({ transactions }: { transactions: Transaction[] }) {
 
   const categoryMap = new Map<string, { icon: string; bg: string; total: number }>();
   for (const tx of thisMonthTxs) {
-    const key = tx.categoryIcon;
-    const existing = categoryMap.get(key);
+    const existing = categoryMap.get(tx.categoryIcon);
     if (existing) {
       existing.total += tx.amountCents;
     } else {
-      categoryMap.set(key, { icon: tx.categoryIcon, bg: tx.categoryBg, total: tx.amountCents });
+      categoryMap.set(tx.categoryIcon, { icon: tx.categoryIcon, bg: tx.categoryBg, total: tx.amountCents });
     }
   }
 
@@ -155,6 +157,7 @@ function SpendingByCategory({ transactions }: { transactions: Transaction[] }) {
               <Text style={{ fontSize: 16 }}>{cat.icon}</Text>
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.catName}>{CAT_LABELS[cat.icon] ?? cat.icon}</Text>
               <View style={styles.catBarRow}>
                 <View style={styles.catBarBg}>
                   <View
@@ -174,16 +177,66 @@ function SpendingByCategory({ transactions }: { transactions: Transaction[] }) {
   );
 }
 
+// ─── Category breakdown for a specific month (used inside Monthly Trend) ──────
+function MonthCategoryBreakdown({
+  transactions, year, month, total,
+}: {
+  transactions: Transaction[]; year: number; month: number; total: number;
+}) {
+  const monthTxs = transactions.filter(
+    tx => tx.createdAt.getFullYear() === year && tx.createdAt.getMonth() === month,
+  );
+
+  const categoryMap = new Map<string, { icon: string; bg: string; total: number }>();
+  for (const tx of monthTxs) {
+    const existing = categoryMap.get(tx.categoryIcon);
+    if (existing) {
+      existing.total += tx.amountCents;
+    } else {
+      categoryMap.set(tx.categoryIcon, { icon: tx.categoryIcon, bg: tx.categoryBg, total: tx.amountCents });
+    }
+  }
+
+  const categories = [...categoryMap.values()].sort((a, b) => b.total - a.total);
+  const maxTotal = categories[0]?.total ?? 1;
+
+  return (
+    <View style={styles.detailContainer}>
+      <View style={styles.detailHeader}>
+        <Text style={styles.detailMonth}>{MONTHS[month]} {year}</Text>
+        <Text style={styles.detailTotal}>{formatAmount(total)}</Text>
+      </View>
+      {categories.length === 0 ? (
+        <Text style={styles.emptyText}>No transactions</Text>
+      ) : (
+        categories.map(cat => (
+          <View key={cat.icon} style={styles.detailRow}>
+            <View style={[styles.detailCatIcon, { backgroundColor: cat.bg }]}>
+              <Text style={{ fontSize: 13 }}>{cat.icon}</Text>
+            </View>
+            <Text style={styles.detailCatLabel}>{CAT_LABELS[cat.icon] ?? cat.icon}</Text>
+            <View style={styles.detailBarBg}>
+              <View
+                style={[
+                  styles.detailBarFill,
+                  { width: `${(cat.total / maxTotal) * 100}%` as any },
+                ]}
+              />
+            </View>
+            <Text style={styles.detailCatAmount}>{formatAmount(cat.total)}</Text>
+          </View>
+        ))
+      )}
+    </View>
+  );
+}
+
 // ─── Monthly Trend ────────────────────────────────────────────────────────────
 function MonthlyTrend({ transactions, budgetCents }: { transactions: Transaction[]; budgetCents: number }) {
   const now = new Date();
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-    return {
-      label: MONTHS[d.getMonth()],
-      year: d.getFullYear(),
-      month: d.getMonth(),
-    };
+    return { label: MONTHS[d.getMonth()], year: d.getFullYear(), month: d.getMonth() };
   });
 
   const data = months.map(m => ({
@@ -193,28 +246,31 @@ function MonthlyTrend({ transactions, budgetCents }: { transactions: Transaction
 
   const maxVal = Math.max(...data.map(d => d.total), budgetCents, 1);
   const BAR_HEIGHT = 100;
+  const [selectedIdx, setSelectedIdx] = useState(5);
+  const sel = data[selectedIdx];
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Monthly Trend</Text>
       <View style={styles.card}>
-        {/* Budget reference line label */}
-        <Text style={styles.trendBudgetLabel}>
-          Budget: {formatAmount(budgetCents)}
-        </Text>
+        <Text style={styles.trendBudgetLabel}>Budget: {formatAmount(budgetCents)}</Text>
         <View style={styles.trendChart}>
-          {/* Budget reference line */}
           <View
             style={[
               styles.trendRefLine,
               { bottom: (budgetCents / maxVal) * BAR_HEIGHT },
             ]}
           />
-          {data.map(d => {
+          {data.map((d, i) => {
             const barH = Math.max((d.total / maxVal) * BAR_HEIGHT, d.total > 0 ? 4 : 0);
             const overBudget = d.total > budgetCents;
+            const isSelected = i === selectedIdx;
             return (
-              <View key={`${d.year}-${d.month}`} style={styles.trendCol}>
+              <TouchableOpacity
+                key={`${d.year}-${d.month}`}
+                style={styles.trendCol}
+                activeOpacity={0.7}
+                onPress={() => setSelectedIdx(i)}>
                 <View style={[styles.trendBarContainer, { height: BAR_HEIGHT }]}>
                   <View
                     style={[
@@ -222,16 +278,64 @@ function MonthlyTrend({ transactions, budgetCents }: { transactions: Transaction
                       {
                         height: barH,
                         backgroundColor: overBudget ? C.red : C.teal,
+                        opacity: isSelected ? 1 : 0.4,
                       },
                     ]}
                   />
                 </View>
-                <Text style={styles.trendLabel}>{d.label}</Text>
-              </View>
+                <Text style={[styles.trendLabel, { color: isSelected ? C.white : C.gray }]}>
+                  {d.label}
+                </Text>
+              </TouchableOpacity>
             );
           })}
         </View>
+        <View style={styles.trendDivider} />
+        <MonthCategoryBreakdown
+          transactions={transactions}
+          year={sel.year}
+          month={sel.month}
+          total={sel.total}
+        />
       </View>
+    </View>
+  );
+}
+
+// ─── Export Section ───────────────────────────────────────────────────────────
+function ExportSection({ transactions }: { transactions: Transaction[] }) {
+  async function handleExport() {
+    const sorted = [...transactions].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+    );
+    const header = 'Date,Amount,Category,Note';
+    const rows = sorted.map(tx => {
+      const date = tx.createdAt.toISOString().split('T')[0];
+      const amount = (tx.amountCents / 100).toFixed(2);
+      const label = CAT_LABELS[tx.categoryIcon] ?? tx.categoryIcon;
+      const note = `"${tx.note.replace(/"/g, '""')}"`;
+      return `${date},${amount},${label},${note}`;
+    });
+    const csv = [header, ...rows].join('\n');
+    try {
+      await Share.share({ message: csv, title: 'Budget Export' });
+    } catch {
+      // share dismissed, nothing to do
+    }
+  }
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Export</Text>
+      <TouchableOpacity style={styles.exportBtn} activeOpacity={0.85} onPress={handleExport}>
+        <Text style={styles.exportBtnIcon}>📤</Text>
+        <View>
+          <Text style={styles.exportBtnTitle}>Export as CSV</Text>
+          <Text style={styles.exportBtnSub}>
+            {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -271,6 +375,7 @@ export default function ReportsScreen({
         />
         <SpendingByCategory transactions={transactions} />
         <MonthlyTrend transactions={transactions} budgetCents={budgetCents} />
+        <ExportSection transactions={transactions} />
         <View style={{ height: 24 }} />
       </ScrollView>
 
@@ -295,12 +400,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   sectionTitle: { color: C.white, fontSize: 16, fontWeight: '700', marginBottom: 10 },
 
-  card: {
-    backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 16,
-  },
-
+  card: { backgroundColor: C.card, borderRadius: 16, padding: 16 },
   emptyText: { color: C.gray, fontSize: 14, textAlign: 'center', paddingVertical: 8 },
 
   // Monthly Summary
@@ -322,7 +422,7 @@ const styles = StyleSheet.create({
   },
   progressFill: { height: 6, borderRadius: 3 },
 
-  // Category
+  // Spending by Category
   catRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   catDivider: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.07)' },
   catIcon: {
@@ -332,6 +432,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  catName: { color: C.white, fontSize: 13, fontWeight: '500', marginBottom: 5 },
   catBarRow: { flexDirection: 'row', alignItems: 'center' },
   catBarBg: {
     flex: 1,
@@ -344,7 +445,7 @@ const styles = StyleSheet.create({
   catBarFill: { height: 8, backgroundColor: C.teal, borderRadius: 4 },
   catAmount: { color: C.white, fontSize: 13, fontWeight: '600', minWidth: 72, textAlign: 'right' },
 
-  // Monthly Trend
+  // Monthly Trend chart
   trendBudgetLabel: { color: C.gray, fontSize: 11, marginBottom: 8 },
   trendChart: {
     flexDirection: 'row',
@@ -363,7 +464,58 @@ const styles = StyleSheet.create({
   trendCol: { flex: 1, alignItems: 'center' },
   trendBarContainer: { justifyContent: 'flex-end', width: '60%' },
   trendBar: { width: '100%', borderRadius: 4 },
-  trendLabel: { color: C.gray, fontSize: 11, marginTop: 6 },
+  trendLabel: { fontSize: 11, marginTop: 6 },
+  trendDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginTop: 16,
+    marginBottom: 12,
+  },
+
+  // Month category detail (inside trend card)
+  detailContainer: { paddingTop: 4 },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  detailMonth: { color: C.white, fontSize: 13, fontWeight: '600' },
+  detailTotal: { color: C.teal, fontSize: 13, fontWeight: '700' },
+  detailRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  detailCatIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  detailCatLabel: { color: C.gray, fontSize: 12, width: 72 },
+  detailBarBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginRight: 8,
+  },
+  detailBarFill: { height: 6, backgroundColor: C.teal, borderRadius: 3 },
+  detailCatAmount: { color: C.white, fontSize: 12, fontWeight: '600', minWidth: 64, textAlign: 'right' },
+
+  // Export
+  exportBtn: {
+    backgroundColor: C.card,
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,201,167,0.2)',
+  },
+  exportBtnIcon: { fontSize: 22, marginRight: 14 },
+  exportBtnTitle: { color: C.white, fontSize: 15, fontWeight: '600' },
+  exportBtnSub: { color: C.gray, fontSize: 12, marginTop: 2 },
 
   // Nav
   bottomNav: {
