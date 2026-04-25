@@ -7,7 +7,7 @@ import TransactionsScreen from './src/screens/TransactionsScreen';
 import BudgetsScreen from './src/screens/BudgetsScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 import { Transaction } from './src/types';
-import { initDB, insertTransaction, loadTransactions, deleteTransaction, updateTransaction } from './src/db';
+import { initDB, insertTransaction, loadTransactions, deleteTransaction, updateTransaction, loadSettings, saveSettings } from './src/db';
 
 export default function App() {
   const [screen, setScreen] = useState<'dashboard' | 'transactions' | 'newExpense' | 'budgets' | 'reports'>('dashboard');
@@ -20,6 +20,9 @@ export default function App() {
   useEffect(() => {
     initDB();
     setTransactions(loadTransactions());
+    const settings = loadSettings();
+    setIncomeCents(settings.incomeCents);
+    setBudgetCents(settings.budgetCents);
   }, []);
 
   function handleSave(tx: Omit<Transaction, 'id' | 'createdAt'>) {
@@ -81,6 +84,7 @@ export default function App() {
           incomeCents={incomeCents}
           budgetCents={budgetCents}
           onSave={(income, budget) => {
+            saveSettings(income, budget);
             setIncomeCents(income);
             setBudgetCents(budget);
             setScreen('dashboard');

@@ -16,6 +16,35 @@ export function initDB(): void {
       created_at    INTEGER NOT NULL
     );
   `);
+  db.executeSync(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key   TEXT PRIMARY KEY,
+      value INTEGER NOT NULL
+    );
+  `);
+}
+
+export function loadSettings(): { incomeCents: number; budgetCents: number } {
+  const result = db.executeSync('SELECT key, value FROM settings;');
+  const map: Record<string, number> = {};
+  for (const row of result.rows) {
+    map[row.key as string] = row.value as number;
+  }
+  return {
+    incomeCents: map.income_cents ?? 124000,
+    budgetCents: map.budget_cents ?? 200000,
+  };
+}
+
+export function saveSettings(incomeCents: number, budgetCents: number): void {
+  db.executeSync(
+    'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);',
+    ['income_cents', incomeCents],
+  );
+  db.executeSync(
+    'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?);',
+    ['budget_cents', budgetCents],
+  );
 }
 
 export function loadTransactions(): Transaction[] {

@@ -159,16 +159,13 @@ export default function NewExpenseScreen({
       {/* ── Header ───────────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{existingTransaction ? 'Edit Expense' : 'New Expense'}</Text>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Text style={styles.starIcon}>☆</Text>
-        </TouchableOpacity>
       </View>
 
       {/* ── Amount display ───────────────────────────────────────────────────── */}
       <View style={styles.amountRow}>
         <View>
           <Text style={styles.amountLabel}>Amount</Text>
-          <Text style={styles.amountSub}>Enit</Text>
+          <Text style={styles.amountSub}>Enter</Text>
         </View>
         <Text style={styles.amountValue}>{formatCents(cents)}</Text>
       </View>
