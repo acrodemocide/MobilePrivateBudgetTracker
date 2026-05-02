@@ -62,9 +62,9 @@ export function loadTransactions(): Transaction[] {
 }
 
 export function insertTransaction(
-  tx: Omit<Transaction, 'id' | 'createdAt'>,
+  tx: Omit<Transaction, 'id'>,
 ): Transaction {
-  const createdAt = Date.now();
+  const createdAt = tx.createdAt.getTime();
   const result = db.executeSync(
     'INSERT INTO transactions (amount_cents, category_icon, category_bg, note, created_at) VALUES (?, ?, ?, ?, ?);',
     [tx.amountCents, tx.categoryIcon, tx.categoryBg, tx.note, createdAt],
@@ -72,17 +72,16 @@ export function insertTransaction(
   return {
     ...tx,
     id: result.insertId as number,
-    createdAt: new Date(createdAt),
   };
 }
 
 export function updateTransaction(
   id: number,
-  tx: Omit<Transaction, 'id' | 'createdAt'>,
+  tx: Omit<Transaction, 'id'>,
 ): void {
   db.executeSync(
-    'UPDATE transactions SET amount_cents = ?, category_icon = ?, category_bg = ?, note = ? WHERE id = ?;',
-    [tx.amountCents, tx.categoryIcon, tx.categoryBg, tx.note, id],
+    'UPDATE transactions SET amount_cents = ?, category_icon = ?, category_bg = ?, note = ?, created_at = ? WHERE id = ?;',
+    [tx.amountCents, tx.categoryIcon, tx.categoryBg, tx.note, tx.createdAt.getTime(), id],
   );
 }
 

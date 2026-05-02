@@ -7,8 +7,11 @@ import {
   StatusBar,
   TextInput,
   Alert,
+  Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Transaction } from '../types';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -40,6 +43,12 @@ function formatCents(cents: number): string {
   const dollars = Math.floor(cents / 100);
   const centsStr = (cents % 100).toString().padStart(2, '0');
   return `$${dollars.toLocaleString()}.${centsStr}`;
+}
+
+function formatDate(d: Date): string {
+  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+  const dd = d.getDate().toString().padStart(2, '0');
+  return `${mm}/${dd}/${d.getFullYear()}`;
 }
 
 // ─── Category icon button ─────────────────────────────────────────────────────
@@ -111,7 +120,7 @@ export default function NewExpenseScreen({
   onCancel,
   existingTransaction,
 }: {
-  onSave: (tx: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  onSave: (tx: Omit<Transaction, 'id'>) => void;
   onCancel: () => void;
   existingTransaction?: Transaction;
 }) {
@@ -122,6 +131,17 @@ export default function NewExpenseScreen({
   const [cents, setCents] = useState(existingTransaction?.amountCents ?? 0);
   const [selectedCat, setSelectedCat] = useState<number | null>(initCatIdx >= 0 ? initCatIdx : null);
   const [note, setNote] = useState(existingTransaction?.note ?? '');
+  const [date, setDate] = useState<Date>(existingTransaction?.createdAt ?? new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  function handleDateChange(_event: DateTimePickerEvent, selectedDate?: Date) {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  }
 
   function handleDigit(d: string) {
     setCents(prev => {
@@ -149,6 +169,7 @@ export default function NewExpenseScreen({
       categoryIcon: cat.icon,
       categoryBg: cat.bg,
       note,
+      createdAt: date,
     });
   }
 
@@ -235,10 +256,46 @@ export default function NewExpenseScreen({
       </View>
 
       {/* ── Date picker ──────────────────────────────────────────────────────── */}
-      <TouchableOpacity style={styles.datePicker} activeOpacity={0.7}>
-        <Text style={styles.dateText}>12/10/2023</Text>
+      <TouchableOpacity style={styles.datePicker} activeOpacity={0.7} onPress={() => setShowDatePicker(true)}>
+        <Text style={styles.dateText}>{formatDate(date)}</Text>
         <Text style={styles.dateChevron}> ˅</Text>
       </TouchableOpacity>
+
+      {/* Android: native dialog; iOS: modal spinner */}
+      {Platform.OS === 'android' && showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}>
+          <TouchableOpacity
+            style={styles.dateModalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowDatePicker(false)}>
+            <View style={styles.dateModalContent} onStartShouldSetResponder={() => true}>
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                textColor={C.white}
+                style={styles.datePickerIOS}
+              />
+              <TouchableOpacity style={styles.dateDoneBtn} onPress={() => setShowDatePicker(false)}>
+                <Text style={styles.dateDoneBtnText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
 
       {/* ── Notes field ──────────────────────────────────────────────────────── */}
       <View style={styles.notesRow}>
@@ -433,6 +490,32 @@ const styles = StyleSheet.create({
   dateChevron: {
     color: C.gray,
     fontSize: 14,
+  },
+
+  // Date picker modal (iOS)
+  dateModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'flex-end',
+  },
+  dateModalContent: {
+    backgroundColor: C.inputBg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 24,
+  },
+  datePickerIOS: {
+    height: 200,
+  },
+  dateDoneBtn: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  dateDoneBtnText: {
+    color: C.teal,
+    fontSize: 16,
+    fontWeight: '600',
   },
 
   // Notes

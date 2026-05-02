@@ -25,7 +25,7 @@ export default function App() {
     setBudgetCents(settings.budgetCents);
   }, []);
 
-  function handleSave(tx: Omit<Transaction, 'id' | 'createdAt'>) {
+  function handleSave(tx: Omit<Transaction, 'id'>) {
     if (editingTransaction) {
       updateTransaction(editingTransaction.id, tx);
       setTransactions(prev =>
