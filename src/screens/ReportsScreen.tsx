@@ -8,7 +8,7 @@ import {
   StatusBar,
   Share,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Transaction } from '../types';
 
 const C = {
@@ -356,6 +356,7 @@ export default function ReportsScreen({
   onNavigateToTransactions: () => void;
   onNavigateToBudgets: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={C.bg} />
@@ -379,7 +380,7 @@ export default function ReportsScreen({
         <View style={{ height: 24 }} />
       </ScrollView>
 
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: 10 + insets.bottom }]}>
         <NavTab icon="🏠"  label="Home"         onPress={onNavigateToDashboard} />
         <NavTab icon="💳"  label="Transactions" onPress={onNavigateToTransactions} />
         <NavTab icon="📊"  label="Budgets"      onPress={onNavigateToBudgets} />

@@ -8,7 +8,7 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Transaction } from '../types';
 
@@ -207,6 +207,7 @@ export default function DashboardScreen({
   onNavigateToReports: () => void;
 }) {
 
+  const insets = useSafeAreaInsets();
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
 
   function confirmDelete(tx: Transaction) {
@@ -277,12 +278,11 @@ export default function DashboardScreen({
           <View style={[styles.miniCard, { marginRight: 8 }]}>
             <View style={styles.miniCardHeader}>
               <View style={styles.avatarCircle}>
-                <Text style={{ fontSize: 14 }}>👤</Text>
+                <Text style={{ fontSize: 14, color: C.teal, fontWeight: '700' }}>$</Text>
               </View>
               <Text style={styles.miniCardTitle}>Income</Text>
             </View>
             <View style={styles.miniCardFooter}>
-              <Text style={styles.miniCardIcon}>⏱</Text>
               <Text style={styles.miniCardAmount}>{formatAmount(incomeCents)}</Text>
             </View>
           </View>
@@ -290,12 +290,11 @@ export default function DashboardScreen({
           <View style={[styles.miniCard, { marginLeft: 8 }]}>
             <View style={styles.miniCardHeader}>
               <View style={styles.avatarCircle}>
-                <Text style={{ fontSize: 14 }}>👤</Text>
+                <Text style={{ fontSize: 14 }}>🐷</Text>
               </View>
               <Text style={styles.miniCardTitle}>Savings</Text>
             </View>
             <View style={styles.miniCardFooter}>
-              <Text style={styles.miniCardIcon}>🐷</Text>
               <Text style={styles.miniCardAmount}>{formatAmount(Math.max(savingsCents, 0))}</Text>
             </View>
           </View>
@@ -345,12 +344,12 @@ export default function DashboardScreen({
       </ScrollView>
 
       {/* ── FAB ──────────────────────────────────────────────────────────────── */}
-      <TouchableOpacity style={styles.fab} activeOpacity={0.85} onPress={onAddExpense}>
+      <TouchableOpacity style={[styles.fab, { bottom: 80 + insets.bottom }]} activeOpacity={0.85} onPress={onAddExpense}>
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
 
       {/* ── Bottom Nav ───────────────────────────────────────────────────────── */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: 10 + insets.bottom }]}>
         <NavTab icon="🏠" label="Home"         active />
         <NavTab icon="💳"  label="Transactions" onPress={onNavigateToTransactions} />
         <NavTab icon="📊" label="Budgets" onPress={onNavigateToBudgets} />

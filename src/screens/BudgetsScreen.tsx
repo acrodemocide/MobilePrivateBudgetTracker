@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const C = {
   bg: '#0E1117',
@@ -96,6 +96,7 @@ export default function BudgetsScreen({
   onNavigateToTransactions: () => void;
   onNavigateToReports: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   const [incomeRaw, setIncomeRaw] = useState(dollarsFromCents(incomeCents));
   const [budgetRaw, setBudgetRaw] = useState(dollarsFromCents(budgetCents));
 
@@ -156,7 +157,7 @@ export default function BudgetsScreen({
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: 10 + insets.bottom }]}>
         <NavTab icon="🏠" label="Home"         onPress={onNavigateToDashboard} />
         <NavTab icon="💳"  label="Transactions" onPress={onNavigateToTransactions} />
         <NavTab icon="📊" label="Budgets"       active />

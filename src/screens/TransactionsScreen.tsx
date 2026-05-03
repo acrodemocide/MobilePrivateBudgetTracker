@@ -8,7 +8,7 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Transaction } from '../types';
 
@@ -92,6 +92,7 @@ export default function TransactionsScreen({
   onNavigateToBudgets: () => void;
   onNavigateToReports: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   const swipeableRefs = useRef<Map<number, Swipeable>>(new Map());
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
   const [selectedIcon, setSelectedIcon] = useState<string>('All');
@@ -231,7 +232,7 @@ export default function TransactionsScreen({
       </ScrollView>
 
       {/* ── Bottom nav ──────────────────────────────────────────────────────── */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: 10 + insets.bottom }]}>
         <NavTab icon="🏠"  label="Home"         onPress={onNavigateToDashboard} />
         <NavTab icon="💳"   label="Transactions" active />
         <NavTab icon="📊"  label="Budgets"       onPress={onNavigateToBudgets} />
