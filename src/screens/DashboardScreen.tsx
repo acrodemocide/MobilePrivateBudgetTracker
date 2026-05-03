@@ -250,7 +250,7 @@ export default function DashboardScreen({
         <TouchableOpacity style={styles.headerBtn} activeOpacity={0.7}>
           <Text style={styles.headerBtnText}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>TrackPrivate</Text>
+        <Text style={styles.headerTitle}>Solo Budget</Text>
       </View>
       <Text style={styles.monthLabel}>
         {now.toLocaleString('default', { month: 'long', year: 'numeric' })}
