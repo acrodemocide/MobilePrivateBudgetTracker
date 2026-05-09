@@ -28,9 +28,9 @@ const C = {
 
 // ─── Category definitions ─────────────────────────────────────────────────────
 const CATEGORIES = [
-  { icon: '🏠', bg: '#3DAA6E', locked: false, star: false, label: 'Housing'   },
+  { icon: '🏠', bg: '#3DAA6E', locked: false, star: false, label: 'Home'   },
   { icon: '🚗', bg: '#4A90D9', locked: false, star: false, label: 'Transport' },
-  { icon: '🍽️', bg: '#7B5EA7', locked: false, star: false, label: 'Food'      },
+  { icon: '🍽️', bg: '#7B5EA7', locked: false, star: false, label: 'Groceries'      },
   { icon: '📥', bg: '#E05C3A', locked: false, star: false, label: 'Utilities' },
   { icon: '❤️', bg: '#2BB5A0', locked: false, star: false, label: 'Health'    },
   { icon: '🎉', bg: '#C9A84C', locked: false, star: false, label: 'Fun'       },
@@ -218,10 +218,10 @@ export default function NewExpenseScreen({
       </View>
 
       {/* ── Upsell banner ────────────────────────────────────────────────────── */}
-      <View style={styles.upsellRow}>
+      {/* <View style={styles.upsellRow}>
         <Text style={styles.upsellText}>Unlock unlimited categories </Text>
         <Text style={styles.upsellFree}>Free</Text>
-      </View>
+      </View> */}
 
       {/* ── Category grid ────────────────────────────────────────────────────── */}
       <View style={styles.catGrid}>

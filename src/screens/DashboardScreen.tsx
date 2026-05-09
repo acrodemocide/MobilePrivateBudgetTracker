@@ -26,6 +26,17 @@ function formatTime(date: Date): string {
   return `${hour}:${m}${ampm}`;
 }
 
+function formatTxDate(date: Date, now: Date): string {
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+  if (sameDay) {
+    return formatTime(date);
+  }
+  return date.toLocaleString('default', { month: 'short', day: 'numeric' });
+}
+
 // ─── Palette ────────────────────────────────────────────────────────────────
 const C = {
   bg: '#0E1117',
@@ -333,7 +344,7 @@ export default function DashboardScreen({
                   <Text style={styles.txAmount}>{formatAmount(tx.amountCents)}</Text>
                   <Text style={styles.txAge}>{tx.note || 'No note'}</Text>
                 </View>
-                <Text style={styles.txTime}>{formatTime(tx.createdAt)}</Text>
+                <Text style={styles.txTime}>{formatTxDate(tx.createdAt, now)}</Text>
               </TouchableOpacity>
             </Swipeable>
           ))
